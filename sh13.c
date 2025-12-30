@@ -324,6 +324,16 @@ int main(int argc, char ** argv)
 			// Message 'D' : le joueur recoit ses trois cartes
 			case 'D'://donc modifier le tableau b
 				// RAJOUTER DU CODE ICI
+				int c0, c1, c2;//numéro des cartes
+				//on recupère les nb des 3 cartes, on convertie le trexte en nombres
+				if (sscanf(gbuffer, "D %d %d %d", &c0, &c1, &c2) == 3) {//verif qu'on a bien 3 cartes
+					b[0] = c0;//premier carte et lien avec SDL
+					b[1] = c1;//deuxième carte
+					b[2] = c2;//troisième carte
+					printf("Cartes reçues : %d %d %d\n", b[0], b[1], b[2]);
+				} else {
+					printf("Erreur lors de la réception des cartes\n");
+				}
 
 				break;
 			// Message 'M' : le joueur recoit le n° du joueur courant
