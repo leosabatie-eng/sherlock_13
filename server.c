@@ -310,6 +310,16 @@ int main(int argc, char *argv[])
 
                                 if (nbClients==4)
 				{
+					printf("Tous les joueurs sont connectés, lancement du jeu !\n");
+					for (int i=0; i < 4; i++)
+					{
+						sprintf(reply, "D %d %d %d", deck[0 + 3*i], deck[1 + 3*i], deck[2 + 3*i]);
+						sendMessageToClient(tcpClients[i].ipAddress, tcpClients[i].port, reply);
+							for (int j = 0 ; j < 8 ; j ++) {
+								sprintf(reply, "V %d %d %d", i, j, tableCartes[i][j]);
+								sendMessageToClient(tcpClients[i].ipAddress, tcpClients[i].port, reply);
+							}
+					}
 					// On envoie ses cartes au joueur 0, ainsi que la ligne qui lui correspond dans tableCartes
 					// RAJOUTER DU CODE ICI
 

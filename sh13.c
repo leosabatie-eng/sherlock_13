@@ -19,7 +19,7 @@ char gClientIpAddress[256];
 int gClientPort;
 char gName[256];
 char gNames[4][256];
-int gId;
+int gId;//id du joeur
 int joueurSel;
 int objetSel;
 int guiltSel;
@@ -129,7 +129,7 @@ int main(int argc, char ** argv)
     int quit = 0;
     SDL_Event event;
 	int mx,my;
-	char sendBuffer[256];
+	char sendBuffer[1024];
 	char lname[256];
 	int id;
 
@@ -235,13 +235,14 @@ int main(int argc, char ** argv)
 			case  SDL_MOUSEBUTTONDOWN:
 				SDL_GetMouseState( &mx, &my );//renvoie la position de la souris
 				//printf("mx=%d my=%d\n",mx,my);
-				if ((mx<200) && (my<50) && (connectEnabled==1))
-				{
+				if ((mx<200) && (my<50) && (connectEnabled==1))//pour jouer
+				{//C pour connexion
 					sprintf(sendBuffer,"C %s %d %s",gClientIpAddress,gClientPort,gName);
-
-					// RAJOUTER DU CODE ICI
-
+					sendMessageToServer(gServerIpAddress, gServerPort, sendBuffer);
+					printf("connect sent |%s|\n",sendBuffer);
 					connectEnabled=0;
+					// RAJOUTER DU CODE ICI
+//pour rejouer
 				}
 				else if ((mx>=0) && (mx<200) && (my>=90) && (my<330))
 				{
@@ -310,9 +311,8 @@ int main(int argc, char ** argv)
 			// Message 'I' : le joueur recoit son Id
 			case 'I':
 				int id;// RAJOUTER DU CODE ICI
-				sscanf(gbuffer, 'I %d', &id);
-				gId = id;
-				printf("Id reçu : %d\n, gid");
+				sscanf(gbuffer, "I %d", &gId);//attention il faut bien que ce soit " et pas ' 
+				printf("Id reçu : %d\n", gId);
 
 				break;
 			// Message 'L' : le joueur recoit la liste des joueurs
