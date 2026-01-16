@@ -39,6 +39,8 @@ int joueurCourant;//quel joueurs doit jouer
 int joueur_restant;//combien de joueurs ne sont pas éliminés
 int eliminated[4];//liste des joueurs éliminés
 char info[256];//pour texte divers
+char info2[256];//pour texte divers
+char pseudo[256]; //pour afficher le nom du joueur
 volatile int synchro;
 
 void *fn_serveur_tcp(void *arg)
@@ -226,7 +228,9 @@ int main(int argc, char ** argv)
    synchro=0;
    ret = pthread_create ( & thread_serveur_tcp_id, NULL, fn_serveur_tcp, NULL);//creer le thread du serveur local
 
-   sprintf(info, "Bonjour %s que le jeu commence", gName);//marche pas
+    sprintf(info2, "Bonjour %s que le jeu commence", gName);
+	sprintf(info, " ");
+	sprintf(pseudo, " %s", gName);
     while (!quit)//boucle graphique
     {
 	if (SDL_PollEvent(&event))
@@ -343,7 +347,7 @@ int main(int argc, char ** argv)
 					printf("Cartes reçues : %d %d %d\n", b[0], b[1], b[2]);
 	
 				} else {
-					printf("Erreur lors de la réception des cartes\n");
+					printf("Erreur lors de la reception des cartes\n");
 				}
 
 				break;
@@ -353,6 +357,7 @@ int main(int argc, char ** argv)
 				// RAJOUTER DU CODE ICI
 				sscanf(gbuffer, "M %d", &joueurCourant);
 				sprintf(info, "A %s de jouer", gNames[joueurCourant]);
+				sprintf(info2, " ");//affiche rien
 				goEnabled = (joueurCourant == gId) ? 1 : 0;
 
 				break;
@@ -367,13 +372,13 @@ int main(int argc, char ** argv)
 				break;
 			case 'W':
 				sscanf(gbuffer, "W %d %s", &i, &nbnoms[12]);
-				sprintf(info, "%s a gagné! le coupable était %s!", gNames[i], nbnoms[12]);
+				sprintf(info, "%s a gagne ! le coupable etait %s!", gNames[i], nbnoms[12]);
 				joueurCourant = -1;//stop le jeu
 
 				break;
 			case 'E':
 			    sscanf(gbuffer, "E %d %d", &i, &j);
-			    sprintf(info, "%s est éliminé! %s est innocent!", gNames[i], nbnoms[j]);
+			    sprintf(info, "%s est elimine! %s est innocent!", gNames[i], nbnoms[j]);
 			    eliminated[i] = 1;
 			    joueur_restant--;//un joueur de moins
 				guiltGuess[j] = 1;
@@ -723,7 +728,7 @@ int main(int argc, char ** argv)
 		}
 
 		// Bandeau des informations
-		SDL_Surface* surfaceMessage = TTF_RenderText_Solid(Sans, info, col);
+		SDL_Surface* surfaceMessage = TTF_RenderText_Solid(Sans, info, col);//bandeau d'info 1
 		SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
 		SDL_Rect Message_rect;
 		Message_rect.x = 400;
@@ -733,6 +738,34 @@ int main(int argc, char ** argv)
 		SDL_RenderCopy(renderer, Message, NULL, &Message_rect);
 		SDL_DestroyTexture(Message);
 		SDL_FreeSurface(surfaceMessage);
+		
+		SDL_RenderPresent(renderer);
+
+		SDL_Surface* surfaceMessage2 = TTF_RenderText_Solid(Sans, info2, col);//bandeau d'info 2
+		SDL_Texture* Message2 = SDL_CreateTextureFromSurface(renderer, surfaceMessage2);
+		SDL_Rect Message_rect2;
+		Message_rect2.x = 400;
+		Message_rect2.y = 500;
+		Message_rect2.w = surfaceMessage2->w;
+		Message_rect2.h = surfaceMessage2->h;
+		SDL_RenderCopy(renderer, Message2, NULL, &Message_rect2);
+		SDL_DestroyTexture(Message2);
+		SDL_FreeSurface(surfaceMessage2);
+
+        SDL_RenderPresent(renderer);
+
+
+
+		SDL_Surface* surfaceMessagen = TTF_RenderText_Solid(Sans, pseudo, col);//affichage du nom du joueur en haut à gauche
+		SDL_Texture* Messagen = SDL_CreateTextureFromSurface(renderer, surfaceMessagen);
+		SDL_Rect Message_rectn;
+		Message_rectn.x = 50;
+		Message_rectn.y = 50;
+		Message_rectn.w = surfaceMessagen->w;
+		Message_rectn.h = surfaceMessagen->h;
+		SDL_RenderCopy(renderer, Messagen, NULL, &Message_rectn);
+		SDL_DestroyTexture(Messagen);
+		SDL_FreeSurface(surfaceMessagen);
 
         SDL_RenderPresent(renderer);
     }
