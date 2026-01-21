@@ -5,6 +5,8 @@
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <time.h>
+
 
 #include <netdb.h>
 #include <arpa/inet.h>
@@ -41,7 +43,7 @@ void melangerDeck()
         int i;
         int index1,index2,tmp;
 
-        for (i=0;i<1200;i++)//1000 échanges pour mélanger
+        for (i=0;i<1000;i++)//1000 échanges pour mélanger
         {
                 index1=rand()%13;
                 index2=rand()%13;
@@ -256,6 +258,7 @@ int nextPlayer(int current){
 
 int main(int argc, char *argv[])
 {
+	srand(time(NULL));//initialisation du générateur de nb aléatoire
      int sockfd, newsockfd, portno;
      socklen_t clilen;
      char buffer[256];
