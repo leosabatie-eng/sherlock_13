@@ -40,7 +40,7 @@ typedef enum {
     STATE_GAMEOVER,
     STATE_VOTE
 } GameState;
-GameState currentGameState = STATE_RULES;
+GameState currentGameState = STATE_RULES; //deroulement de la partie
 
 char *nbobjets[]={"5","5","5","5","4","3","3","3"};
 char *nbnoms[]={"Sebastian Moran", "irene Adler", "inspector Lestrade",
@@ -246,7 +246,7 @@ int main(int argc, char ** argv)
 	connectbutton = IMG_Load("connectbutton.png");
 	quitbutton = IMG_Load("quit.png");
 
-	logo = IMG_Load("logo.png");//affichage
+	logo = IMG_Load("logo.png");//affichage du logo du jeu
 
 	strcpy(gNames[0],"-");
 	strcpy(gNames[1],"-");
@@ -296,8 +296,8 @@ int main(int argc, char ** argv)
 	sprintf(pseudo, "joueur: %s", gName);
     while (!quit)//boucle graphique
     {
-	if (SDL_PollEvent(&event))
-	{
+		if (SDL_PollEvent(&event))
+		{
 		//printf("un event\n");
         	switch (event.type)
         	{
@@ -425,21 +425,21 @@ int main(int argc, char ** argv)
 		{
 			// Message 'I' : le joueur recoit son Id
 			case 'I':
-				int id;// RAJOUTER DU CODE ICI
+				int id;
 				sscanf(gbuffer, "I %d", &gId);//attention il faut bien que ce soit " et pas ' 
 				printf("Id reçu : %d\n", gId);
 
 				break;
 			// Message 'L' : le joueur recoit la liste des joueurs
 			case 'L':
-				// RAJOUTER DU CODE ICI
+				
 				sscanf(gbuffer, "L %s %s %s %s", gNames[0], gNames[1], gNames[2], gNames[3]);
 				sprintf(info, "En attente de joueurs ...");
 				break;
 			// Message 'D' : le joueur recoit ses trois cartes
 			case 'D'://donc modifier le tableau b
 				sprintf(info2, "Que le jeu commence !");//debut du jeu
-				// RAJOUTER DU CODE ICI
+			
 				int c0, c1, c2;//numéro des cartes
 				//on recupère les nb des 3 cartes, on convertie le texte en nombres
 				if (sscanf(gbuffer, "D %d %d %d", &c0, &c1, &c2) == 3) {//verif qu'on a bien 3 cartes
@@ -456,7 +456,7 @@ int main(int argc, char ** argv)
 			// Message 'M' : le joueur recoit le n° du joueur courant
 			// Cela permet d'affecter goEnabled pour autoriser l'affichage du bouton go
 			case 'M':
-				// RAJOUTER DU CODE ICI
+				
 				sscanf(gbuffer, "M %d", &joueurCourant);
 				currentGameState = STATE_INGAME;
 				if (joueurCourant == gId) {
@@ -470,14 +470,14 @@ int main(int argc, char ** argv)
 				break;
 			// Message 'V' : le joueur recoit une valeur de tableCartes
 			case 'V':
-				// RAJOUTER DU CODE ICI
+				
 				sscanf(gbuffer, "V %d %d %d", &i, &j, &n);
 				if (tableCartes[i][j] == -1 || tableCartes[i][j] == 0 || tableCartes[i][j] == 100){
 						tableCartes[i][j] = n;
 				}
 
 				break;
-			case 'W':
+			case 'W'://gagnant du jeu
 				sscanf(gbuffer, "W %d %d", &i, &coupable);
 				sprintf(info2, "%s a gagne! %s est coupable!", gNames[i], nbnoms[coupable]);
 				goEnabled = 0;
@@ -485,7 +485,7 @@ int main(int argc, char ** argv)
 				currentGameState = STATE_GAMEOVER;
 
 				break;
-			case 'E':
+			case 'E'://elimination d'un joueur
 				sprintf(info2, " ");//affiche rien
 			    sscanf(gbuffer, "E %d %d", &i, &j);
 			    sprintf(info2, "%s est elimine! %s est innocent!", gNames[i], nbnoms[j]);//affiche qui est eliminer est pourquoi
@@ -494,7 +494,7 @@ int main(int argc, char ** argv)
 				guiltGuess[j] = 1;
 
 			    break;
-			case 'K':
+			case 'K'://joueur qui quitte la partie
 				{
 					int quit_id;
 					sscanf(gbuffer, "K %d", &quit_id);
