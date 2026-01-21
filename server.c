@@ -152,6 +152,8 @@ void endGameAndProposeReplay(int winnerId, int guiltyCard) {
 	if (winnerId != -1) {
 		sprintf(reply, "W %d %d", winnerId, guiltyCard);
 		broadcastMessage(reply);
+		sleep(5); // Wait 5 seconds before sending the game over message
+	
 	}
 	fsmServer = 2; // Go to post-game/voting state
 	printf("Game over. Proposing replay.\n");

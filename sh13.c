@@ -321,6 +321,7 @@ int main(int argc, char ** argv)
 						showQuitConfirmation = 0; // No, go back to game
 					}
 				} else if (currentGameState == STATE_VOTE && !hasVoted) {
+
 					// "Oui" button for replay
 					if (mx >= 1024/2 - 150 && mx <= 1024/2 - 50 && my >= 768/2 + 10 && my <= 768/2 + 60) {
 						sprintf(sendBuffer, "Y %d", gId);
@@ -437,6 +438,7 @@ int main(int argc, char ** argv)
 				break;
 			// Message 'D' : le joueur recoit ses trois cartes
 			case 'D'://donc modifier le tableau b
+				sprintf(info2, "Que le jeu commence !");//debut du jeu
 				// RAJOUTER DU CODE ICI
 				int c0, c1, c2;//numéro des cartes
 				//on recupère les nb des 3 cartes, on convertie le texte en nombres
@@ -478,10 +480,9 @@ int main(int argc, char ** argv)
 			case 'W':
 				sscanf(gbuffer, "W %d %d", &i, &coupable);
 				sprintf(info2, "%s a gagne! %s est coupable!", gNames[i], nbnoms[coupable]);
-				currentGameState = STATE_GAMEOVER;
 				goEnabled = 0;
 				gagnant = i;
-				
+				currentGameState = STATE_GAMEOVER;
 
 				break;
 			case 'E':
@@ -884,8 +885,8 @@ int main(int argc, char ** argv)
     }
 
 	// Bandeaux d'informations
-	renderText(renderer, Sans, info, 400, 650, col, false);
-	renderText(renderer, Sans, info2, 400, 600, col, false);
+	renderText(renderer, Sans, info, 400, 700, col, false);
+	renderText(renderer, Sans, info2, 400, 650, col, false);
 
 	// Affichage du nom du joueur
 	renderText(renderer, Sans, pseudo, 50, 50, col, false);
