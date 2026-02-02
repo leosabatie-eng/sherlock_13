@@ -273,12 +273,12 @@ int main(int argc, char *argv[])
         int id;
         char reply[256];
 
-
+		//Verifie qu'on a bien le numéro du port
      if (argc < 2) {
          fprintf(stderr,"ERROR, no port provided\n");
          exit(1);
      }
-     sockfd = socket(AF_INET, SOCK_STREAM, 0);
+     sockfd = socket(AF_INET, SOCK_STREAM, 0);//socket TCP
      if (sockfd < 0) 
         error("ERROR opening socket");
      bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
      serv_addr.sin_family = AF_INET;
      serv_addr.sin_addr.s_addr = INADDR_ANY;
      serv_addr.sin_port = htons(portno);
-     if (bind(sockfd, (struct sockaddr *) &serv_addr,
+     if (bind(sockfd, (struct sockaddr *) &serv_addr,//creation du bind
               sizeof(serv_addr)) < 0) 
               error("ERROR on binding");
      listen(sockfd,5);

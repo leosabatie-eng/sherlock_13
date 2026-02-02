@@ -58,6 +58,10 @@ volatile int synchro;
 int showQuitConfirmation = 0;
 int hasVoted = 0;
 
+int manualTableNotes[4][8];
+int selectedCellX = -1;
+int selectedCellY = -1;
+
 void *fn_serveur_tcp(void *arg)
 {
         int sockfd, newsockfd, portno;
@@ -179,6 +183,7 @@ void resetClientState() {
 	for (int i=0; i<4; i++) {
 		for (int j=0; j<8; j++) {
 			tableCartes[i][j] = -1;
+			manualTableNotes[i][j] = -1;
 		}
 		eliminated[i] = 0;
 	}
@@ -266,8 +271,10 @@ int main(int argc, char ** argv)
 
 	for (i=0;i<4;i++)
 		for (j=0;j<8;j++)
+		{
 			tableCartes[i][j]=-1;
-
+			manualTableNotes[i][j] = -1;
+		}
 	goEnabled=0;
 	connectEnabled=1;
 //pas de surface dans la fnetres mais des textures, c'est pourquoi on change
@@ -304,6 +311,30 @@ int main(int argc, char ** argv)
             		case SDL_QUIT:
                 		showQuitConfirmation = 1;
                 		break;
+			case SDL_KEYDOWN:
+				if (selectedCellX != -1 && selectedCellY != -1) {
+					SDL_Keycode key = event.key.keysym.sym;
+					SDL_Scancode scancode = event.key.keysym.scancode;
+
+					if (key == SDLK_BACKSPACE) {
+						manualTableNotes[selectedCellY][selectedCellX] = -1;
+					}
+					// Top row numbers (layout independent via scancode)
+					else if (scancode >= SDL_SCANCODE_1 && scancode <= SDL_SCANCODE_9) {
+						manualTableNotes[selectedCellY][selectedCellX] = scancode - SDL_SCANCODE_1 + 1;
+					}
+					else if (scancode == SDL_SCANCODE_0) {
+						manualTableNotes[selectedCellY][selectedCellX] = 0;
+					}
+					// Numpad
+					else if (key >= SDLK_KP_0 && key <= SDLK_KP_9) {
+						manualTableNotes[selectedCellY][selectedCellX] = key - SDLK_KP_0;
+					} else if (key == SDLK_ESCAPE) {
+						selectedCellX = -1;
+						selectedCellY = -1;
+					}
+				}
+				break;
 			case  SDL_MOUSEBUTTONDOWN:
 				SDL_GetMouseState( &mx, &my );//renvoie la position de la souris
 				if (showQuitConfirmation) {
@@ -353,21 +384,42 @@ int main(int argc, char ** argv)
 					else if ((mx>=974) && (mx<=1014) && (my>=718) && (my<=758)) { // Bouton Quitter
 						showQuitConfirmation = 1;
 					}
+					else if (currentGameState == STATE_INGAME && (mx >= 200) && (mx < 680) && (my >= 90) && (my < 330))
+					{
+						int col = (mx - 200) / 60;
+						int row = (my - 90) / 60;
+						if (tableCartes[row][col] == -1) {
+							selectedCellX = col;
+							selectedCellY = row;
+							joueurSel = -1;
+							objetSel = -1;
+							guiltSel = -1;
+						} else {
+							selectedCellX = -1;
+							selectedCellY = -1;
+						}
+					}
 					else if (currentGameState != STATE_LOBBY && (mx>=0) && (mx<200) && (my>=90) && (my<330))
 					{
 						joueurSel=(my-90)/60;
 						guiltSel=-1;
+						selectedCellX = -1;
+						selectedCellY = -1;
 					}
 					else if ((mx>=200) && (mx<680) && (my>=0) && (my<90))
 					{
 						objetSel=(mx-200)/60;
 						guiltSel=-1;
+						selectedCellX = -1;
+						selectedCellY = -1;
 					}
 					else if ((mx>=100) && (mx<250) && (my>=350) && (my<740))
 					{
 						joueurSel=-1;
 						objetSel=-1;
 						guiltSel=(my-350)/30;
+						selectedCellX = -1;
+						selectedCellY = -1;
 					}
 					else if ((mx>=250) && (mx<300) && (my>=350) && (my<740))
 					{
@@ -383,24 +435,33 @@ int main(int argc, char ** argv)
 							sendMessageToServer(gServerIpAddress, gServerPort, sendBuffer);
 							goEnabled = 0;
 						}
-						else if ((objetSel!=-1) && (joueurSel==-1))
-						{//demande si tout le monde a cette carte
-							sprintf(sendBuffer,"O %d %d",gId, objetSel);
-							sendMessageToServer(gServerIpAddress, gServerPort, sendBuffer);
+						else if (objetSel != -1)
+						{
+							// Si un autre joueur est sélectionné, on lui pose la question.
+							if (joueurSel != -1 && joueurSel != gId)
+							{
+								//demande a une personne combien elle a de cartes de ce type
+								sprintf(sendBuffer,"S %d %d %d",gId, joueurSel,objetSel);
+								sendMessageToServer(gServerIpAddress, gServerPort, sendBuffer);
+							}
+							else // Sinon (aucun joueur sélectionné OU c'est moi-même), on pose la question à tout le monde.
+							{
+								//demande à tout le monde qui a cette carte
+								sprintf(sendBuffer,"O %d %d",gId, objetSel);
+								sendMessageToServer(gServerIpAddress, gServerPort, sendBuffer);
+							}
 							goEnabled = 0;
 						}
-						else if ((objetSel!=-1) && (joueurSel!=-1))
-						{//demande a une personne si elle a cette carte
-							sprintf(sendBuffer,"S %d %d %d",gId, joueurSel,objetSel);
-							sendMessageToServer(gServerIpAddress, gServerPort, sendBuffer);
-							goEnabled = 0;
-						}
+						selectedCellX = -1;
+						selectedCellY = -1;
 					}
 					else
 					{
 						joueurSel=-1;
 						objetSel=-1;
 						guiltSel=-1;
+						selectedCellX = -1;
+						selectedCellY = -1;
 					}
 				}
 				break;
@@ -552,6 +613,7 @@ int main(int argc, char ** argv)
 		renderText(renderer, Sans, "3. Porter une accusation : 'Je pense que le coupable est...' (clic sur un suspect en bas a gauche).", 140, 340, col, false);
 		renderText(renderer, Sans, "Une fausse accusation vous elimine de la partie !", 120, 380, col, false);
 		renderText(renderer, Sans, "Le dernier joueur en lice ou le premier a trouver le coupable gagne.", 120, 410, col, false);
+		renderText(renderer, Sans, "Astuce : Cliquez sur les cases de la grille pour ecrire vos notes (shift + 'num').", 120, 450, col, false);
 
 		// "Jouer" button
 		SDL_Rect playButton = {1024/2 - 100, 600, 200, 50};
@@ -588,6 +650,13 @@ int main(int argc, char ** argv)
 		SDL_RenderFillRect(renderer, &rect1);
 	}
 
+	if (selectedCellX != -1 && selectedCellY != -1)
+	{
+		SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255); // Jaune pour la sélection
+		SDL_Rect rect1 = {200 + selectedCellX * 60, 90 + selectedCellY * 60, 60, 60};
+		SDL_RenderDrawRect(renderer, &rect1);
+	}
+
 	// Affichage des icones des objets
 	for (i = 0; i < 8; i++) {
 		SDL_Rect dstrect_objet = { 210 + i * 60, 10, 40, 40 };
@@ -596,6 +665,7 @@ int main(int argc, char ** argv)
 
     // Affichage des comptes des objets
 	SDL_Color col1 = {0, 0, 0};
+	SDL_Color manualNoteColor = {200, 50, 50, 255}; // Couleur rouge pour les notes
 	for (i=0;i<8;i++)
 	{
 		renderText(renderer, Sans, nbobjets[i], 230 + i * 60, 50, col1, true);
@@ -620,26 +690,30 @@ int main(int argc, char ** argv)
 	for (i=0;i<4;i++)
         	for (j=0;j<8;j++)
         	{
-			if (tableCartes[i][j]!=-1)
-			{
 				char mess[10];
-				if (tableCartes[i][j]==100)
-					sprintf(mess,"*");
-				else
-					sprintf(mess,"%d",tableCartes[i][j]);
-                		SDL_Surface* surfaceMessage = TTF_RenderText_Solid(Sans, mess, col1);
-                		SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
+				SDL_Surface* surfaceMessage = NULL;
 
-                		SDL_Rect Message_rect;
-                		Message_rect.x = 230+j*60;
-                		Message_rect.y = 110+i*60;
-                		Message_rect.w = surfaceMessage->w;
-                		Message_rect.h = surfaceMessage->h;
+				// Les données du serveur ont la priorité
+				if (tableCartes[i][j] != -1) {
+					if (tableCartes[i][j] == 100)
+						sprintf(mess, "*");
+					else
+						sprintf(mess, "%d", tableCartes[i][j]);
+					surfaceMessage = TTF_RenderText_Solid(Sans, mess, col1); // En noir
+				}
+				// Sinon, on affiche les notes manuelles
+				else if (manualTableNotes[i][j] != -1) {
+					sprintf(mess, "%d", manualTableNotes[i][j]);
+					surfaceMessage = TTF_RenderText_Solid(Sans, mess, manualNoteColor); // En rouge
+				}
 
-                		SDL_RenderCopy(renderer, Message, NULL, &Message_rect);
-                		SDL_DestroyTexture(Message);
-                		SDL_FreeSurface(surfaceMessage);
-			}
+				if (surfaceMessage) {
+					SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
+					SDL_Rect Message_rect = { 230 + j * 60, 110 + i * 60, surfaceMessage->w, surfaceMessage->h };
+					SDL_RenderCopy(renderer, Message, NULL, &Message_rect);
+					SDL_DestroyTexture(Message);
+					SDL_FreeSurface(surfaceMessage);
+				}
         	}
 
 
