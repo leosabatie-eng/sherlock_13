@@ -322,7 +322,7 @@ int main(int argc, char *argv[])
         printf("Received packet from %s:%d\nData: [%s]\n\n",
                 inet_ntoa(cli_addr.sin_addr), ntohs(cli_addr.sin_port), buffer);
 
-        if (fsmServer==0)
+        if (fsmServer==0)//il n'y a pas encore assez de joueurs
         {
         	switch (buffer[0])
         	{
